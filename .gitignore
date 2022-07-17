@@ -1,0 +1,10 @@
+.DS*
+node_modules
+yarn-error.*
+**/**/node_modules
+.env
+certs/*
+!certs/.gitkeep
+**/dist
+/error/*
+deploy.sh

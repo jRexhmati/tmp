@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2016",
+    "module": "commonjs",
+    "lib": ["es2016"],
+    "types": ["reflect-metadata"],
+    "moduleResolution": "node",
+    "declaration": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "noImplicitAny": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
+  },
+  "strict": true,
+  "include": ["src"],
+  "exclude": ["node_modules", "**/__tests__/*"]
+}

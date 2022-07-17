@@ -1,0 +1,39 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../node_modules/@internal/prisma/client"
+  binaryTargets = ["native", "darwin", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("CLIENTS_DATABASE_URL")
+}
+
+model clients {
+  id          Int       @id @default(autoincrement()) @db.UnsignedInt
+  name        String    @db.VarChar(255)
+  slug        String    @db.VarChar(255)
+  db_username String    @db.VarChar(255)
+  db_name     String    @db.VarChar(255)
+  db_pass     String    @db.VarChar(255)
+  status      Int       @default(0) @db.SmallInt
+  created     DateTime? @default(now()) @db.DateTime(0)
+  updated     DateTime? @default(now()) @db.DateTime(0)
+  domains     domains[]
+}
+
+model domains {
+  client_id Int     @db.UnsignedInt
+  name      String  @db.VarChar(255)
+  id        Int     @id @default(autoincrement()) @db.UnsignedInt
+  clients   clients @relation(fields: [client_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "domains_ibfk_1")
+
+  @@index([client_id], map: "client_id")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model migrations {
+  version BigInt
+
+  @@ignore
+}

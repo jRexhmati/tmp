@@ -1,0 +1,67 @@
+{
+  "name": "booston-services",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:BoostonIO/booston-services.git",
+  "license": "ISC",
+  "engines": {
+    "node": "16.13.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:auth": "cd apps/auth && nodemon --exec 'node --inspect=127.0.0.1:9501 -r dotenv/config -r ts-node/register ./src/index.ts' dotenv_config_path=./.env",
+    "start:prod:auth": "cd apps/auth && node dist/index.js dotenv_config_path=./.env",
+    "start:recruitment": "cd apps/recruitment && nodemon --exec 'node --inspect=127.0.0.1:9502 -r dotenv/config -r ts-node/register ./src/index.ts' dotenv_config_path=./.env",
+    "start:prod:recruitment": "cd apps/recruitment && node dist/index.js dotenv_config_path=./.env",
+    "start:settings": "cd apps/settings && nodemon --exec 'node --inspect=127.0.0.1:9503 -r dotenv/config -r ts-node/register ./src/index.ts' dotenv_config_path=./.env",
+    "start:prod:settings": "cd apps/settings && node dist/index.js dotenv_config_path=./.env",
+    "start:content": "cd apps/content && nodemon --exec 'node --inspect=127.0.0.1:9504 -r dotenv/config -r ts-node/register ./src/index.ts' dotenv_config_path=./.env",
+    "start:prod:content": "cd apps/content && node dist/index.js dotenv_config_path=./.env",
+    "start:workers": "cd apps/workers && nodemon --exec 'node --inspect=127.0.0.1:9505 -r dotenv/config -r ts-node/register ./src/index.ts' dotenv_config_path=./.env",
+    "start:apps": "concurrently --names \"auth,recruitment,settings,content,workers\" \"yarn start:auth\"  \"yarn start:recruitment\"  \"yarn start:settings\" \"yarn start:content\" \"yarn start:workers\"",
+    "start:prod:apps": "concurrently --names \"auth,recruitment,settings,content\" \"yarn start:prod:auth\"  \"yarn start:prod:recruitment\"  \"yarn start:prod:settings\" \"yarn start:prod:content\"",
+    "clean:apps": "./scripts/install-dependencies.sh",
+    "generate:envs": "./scripts/generate-envs.sh && ./scripts/install-dependencies.sh",
+    "generate:docs": "apidoc -i ./docs_config -i ./apps/**/src -o ./docs",
+    "build:apps": "./scripts/build.sh",
+    "link-package": "./scripts/link-package.sh",
+    "lint": "eslint \"apps/**/src/**/*.ts\" --fix",
+    "prettier": "prettier --write ./apps/**/src",
+    "start:worker:listener": "cd apps/workers && node -r dotenv/config -r ts-node/register ./src/queues/listener.ts dotenv_config_path=./.env",
+    "start:worker:consumer": "cd apps/workers && node -r dotenv/config -r ts-node/register ./src/queues/getter.ts dotenv_config_path=./.env",
+    "start:worker:setter": "cd apps/workers && node -r dotenv/config -r ts-node/register ./src/queues/setter.ts dotenv_config_path=./.env",
+    "start:queue": "concurrently --names \"WorkerListener,WorkerConsumer\" \"yarn start:worker:listener\" \"yarn start:worker:consumer\""
+  },
+  "dependencies": {
+    "dotenv": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.5",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "apidoc": "^0.50.1",
+    "concurrently": "^6.4.0",
+    "eslint": "^8.2.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-simple-import-sort": "^7.0.0",
+    "husky": "4",
+    "lint-staged": "^10.2.11",
+    "nodemon": "^2.0.15",
+    "prettier": "^2.4.1",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.5.2"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "rm -rf ./apps/**/dist && lint-staged"
+    }
+  },
+  "lint-staged": {
+    "apps/**/src/**/*.ts": [
+      "prettier --write",     
+      "eslint --fix"
+    ]
+  }
+}

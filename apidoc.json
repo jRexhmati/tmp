@@ -1,0 +1,22 @@
+{
+  "name": "Booston.io API",
+  "version": "0.1.0",
+  "description": "List all Booston.io API services",
+  "title": "Booston.io API",
+  "url" : "https://api-docs.dev.booston.io",
+  "sampleUrl": "https://api.dev.booston.io",
+  "header": {
+    "title": "Header title",
+    "filename": "./docs_config/header.md"
+  },
+  "footer": {
+    "title": "Footer title",
+    "filename": "./docs_config/footer.md"
+  },
+  "order": [
+    "Auth",
+    "AdminModule",
+    "Application",
+    "GeneralOption"
+  ]
+}

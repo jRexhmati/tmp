@@ -1,0 +1,1404 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "darwin", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model AdditionalJob {
+  id                      Int               @id @default(autoincrement()) @db.UnsignedInt
+  job_id                  Int               @db.UnsignedInt
+  title                   String            @db.VarChar(100)
+  slug                    String            @db.VarChar(100)
+  additional_job_types_id Int               @db.UnsignedInt
+  additionalJobType       AdditionalJobType @relation("additional_job_typesToadditional_jobs", fields: [additional_job_types_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "additional_jobs_ibfk_2")
+  job                     Job               @relation(fields: [job_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "additional_jobs_ibfk_1")
+
+  @@index([additional_job_types_id], map: "additional_job_types_id")
+  @@index([job_id], map: "job_id")
+  @@map("additional_jobs")
+}
+
+model AdminModule {
+  id              Int              @id @default(autoincrement())
+  parent_id       Int?
+  name            String           @db.VarChar(500)
+  url             String           @db.VarChar(100)
+  icon            String           @db.VarChar(200)
+  slug            String           @db.VarChar(200)
+  is_menu         Int
+  parent_order    Int
+  userPermissions UserPermission[]
+  userRoles       UserRole[]
+
+  @@map("admin_modules")
+}
+
+model ApplicantToJob {
+  id           Int       @id @default(autoincrement()) @db.UnsignedInt
+  applicant_id Int       @db.UnsignedInt
+  job_id       Int       @db.UnsignedInt
+  created      DateTime  @db.DateTime(0)
+  applicant    Applicant @relation(fields: [applicant_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "applicant_to_job_ibfk_2")
+  job          Job       @relation(fields: [job_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "applicant_to_job_ibfk_1")
+
+  @@index([applicant_id], map: "applicant_id")
+  @@index([job_id], map: "job_id")
+  @@map("applicant_to_job")
+}
+
+model Applicant {
+  id                        Int                    @id @default(autoincrement()) @db.UnsignedInt
+  ga_user_id                Int
+  created                   DateTime               @db.DateTime(0)
+  opt_in                    Int?                   @default(0)
+  modified                  DateTime               @db.DateTime(0)
+  modified_by               Int
+  name                      String?                @db.VarChar(100)
+  email                     String?                @db.VarChar(100)
+  phone                     String?                @db.VarChar(100)
+  cv                        String?                @db.VarChar(200)
+  Fname                     String?                @db.VarChar(100)
+  Mname                     String?                @db.VarChar(100)
+  Lname                     String?                @db.VarChar(100)
+  address                   String?                @db.VarChar(100)
+  number                    String?                @db.VarChar(100)
+  number_addition           String?                @db.VarChar(100)
+  zipcode                   String?                @db.VarChar(100)
+  city                      String?                @db.VarChar(100)
+  motivatiebrief            String?                @db.VarChar(200)
+  candidate_redirection_url String?                @db.Text
+  ats_id                    String?                @db.VarChar(100)
+  retry_number              Int?                   @default(0)
+  applicantToJobs           ApplicantToJob[]
+  applications              Application[]
+  customCampaignDetails     CustomCampaignDetail[]
+
+  @@map("applicants")
+}
+
+model Application {
+  id                 Int       @id @default(autoincrement()) @db.UnsignedInt
+  ats_id             String?   @db.VarChar(100)
+  applicant_id       Int       @db.UnsignedInt
+  job_id             Int?      @db.UnsignedInt
+  created            DateTime  @db.DateTime(0)
+  modified           DateTime  @db.DateTime(0)
+  modified_by        Int
+  progress           Int
+  status             String    @db.VarChar(100)
+  status_update      Int       @default(0)
+  rating             Int
+  rating_update      Int       @default(0)
+  source             String    @db.VarChar(500)
+  lead_id_deprecated String    @db.VarChar(100)
+  lead_ad_id         String    @db.VarChar(500)
+  initial_status     String    @db.VarChar(100)
+  campaign_id        Int?      @db.UnsignedInt
+  custom_campaign_id Int?
+  deleted_job        Boolean   @default(false)
+  applicant          Applicant @relation(fields: [applicant_id], references: [id], onDelete: Cascade, map: "applications_ibfk_1")
+  job                Job?      @relation(fields: [job_id], references: [id], onUpdate: Restrict, map: "applications_ibfk_2")
+
+  @@index([applicant_id], map: "applicant_id")
+  @@index([job_id], map: "job_id")
+  @@map("applications")
+}
+
+model Ats {
+  id       Int     @id @default(autoincrement()) @db.UnsignedInt
+  ats_name String  @db.VarChar(5)
+  ats_url  String? @db.VarChar(500)
+
+  @@map("ats")
+}
+
+model AtsAttributesMatcher {
+  id                Int          @id @default(autoincrement()) @db.UnsignedInt
+  attribute_id      Int          @db.UnsignedInt
+  property_accessor String       @db.VarChar(500)
+  jobAttribute      JobAttribute @relation(fields: [attribute_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ats_attributes_matcher_ibfk_1")
+
+  @@index([attribute_id], map: "attribute_id")
+  @@map("ats_attributes_matcher")
+}
+
+model AtsLog {
+  id      Int      @id @default(autoincrement()) @db.UnsignedInt
+  created DateTime @db.DateTime(0)
+  command String   @db.VarChar(100)
+  param_1 String?  @db.VarChar(100)
+  param_2 String   @db.VarChar(100)
+
+  @@map("ats_log")
+}
+
+model AtsRecruiterAttributesMatcher {
+  id                 Int                @id @default(autoincrement()) @db.UnsignedInt
+  attribute_id       Int                @db.UnsignedInt
+  property_accessor  String             @db.VarChar(500)
+  recruiterAttribute RecruiterAttribute @relation(fields: [attribute_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ats_recruiter_attributes_matcher_ibfk_1")
+
+  @@index([attribute_id], map: "attribute_id")
+  @@map("ats_recruiter_attributes_matcher")
+}
+
+model AtsStatusConversion {
+  id         Int    @id @default(autoincrement()) @db.UnsignedInt
+  our_status String @db.VarChar(500)
+  ats_status String @db.VarChar(500)
+
+  @@map("ats_status_conversion")
+}
+
+model AttributeToJob {
+  id                 Int               @id @default(autoincrement()) @db.UnsignedInt
+  attribute_id       Int               @db.UnsignedInt
+  attribute_value_id Int               @db.UnsignedInt
+  job_id             Int               @db.UnsignedInt
+  jobAttribute       JobAttribute      @relation(fields: [attribute_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "attribute_to_job_ibfk_2")
+  jobAttributeValue  JobAttributeValue @relation(fields: [attribute_value_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "attribute_to_job_ibfk_3")
+  job                Job               @relation(fields: [job_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "attribute_to_job_ibfk_1")
+
+  @@index([attribute_id], map: "attribute_id")
+  @@index([attribute_value_id], map: "attribute_value_id")
+  @@index([job_id], map: "job_id")
+  @@map("attribute_to_job")
+}
+
+model Campaign {
+  id                   Int       @id @default(autoincrement()) @db.UnsignedInt
+  language             String?   @db.VarChar(20)
+  created_at           DateTime? @db.DateTime(0)
+  created_by           Int
+  pub_date             DateTime  @db.DateTime(0)
+  pub_end_date         DateTime? @db.DateTime(0)
+  source               String    @db.VarChar(100)
+  medium               String    @db.VarChar(20)
+  feed_type            String    @db.VarChar(20)
+  active               Int       @default(1)
+  boost                Int       @default(0)
+  weekly_refresh       Int?
+  title                String    @db.VarChar(100)
+  filters              String    @db.Text
+  last_build_date      DateTime? @db.DateTime(0)
+  status               Int?
+  destination          Int?
+  type                 Int?
+  campaign_logo        String?   @db.VarChar(100)
+  additional_jobs      Int?      @default(0)
+  slug                 String?   @db.VarChar(500)
+  contract             Int       @default(0)
+  alternative_filters  String?   @db.Text
+  updated_at           DateTime? @default(dbgenerated("('2020-01-13 15:32:53')")) @db.DateTime(0)
+  last_synchronization DateTime? @db.DateTime(0)
+  centralized_slug     String?   @db.VarChar(100)
+
+  @@map("campaigns")
+}
+
+model Content {
+  id               Int     @id @default(autoincrement()) @db.UnsignedInt
+  page_id          Int
+  language         String  @db.VarChar(20)
+  hide             Int     @default(0)
+  page_title       String  @db.VarChar(200)
+  slug             String  @db.VarChar(100)
+  meta_description String? @db.VarChar(200)
+  main_title       String? @db.VarChar(500)
+  specs            String? @db.Text
+
+  @@map("content")
+}
+
+model CustomCampaign {
+  id                      Int                    @id @default(autoincrement()) @db.UnsignedInt
+  custom_campaign_name    String                 @db.VarChar(100)
+  slug                    String                 @db.VarChar(100)
+  general_tracking_script String?                @db.VarChar(5000)
+  created_on              DateTime               @db.DateTime(6)
+  first_apply_script      String?                @db.VarChar(5000)
+  active                  Int
+  second_apply_script     String?                @db.VarChar(5000)
+  customCampaignDetails   CustomCampaignDetail[]
+
+  @@map("custom_campaigns")
+}
+
+model CustomCampaignDetail {
+  id                  Int            @id @default(autoincrement()) @db.UnsignedInt
+  custom_campaigns_id Int            @db.UnsignedInt
+  userid              String         @db.VarChar(100)
+  email               String         @db.VarChar(100)
+  first_name          String         @db.VarChar(100)
+  last_name           String         @db.VarChar(100)
+  phone               String         @db.VarChar(100)
+  job_id              Int
+  job_title           String         @db.VarChar(100)
+  created_on          DateTime       @db.DateTime(6)
+  applicant_id        Int            @db.UnsignedInt
+  application_id      Int?
+  applicant           Applicant      @relation(fields: [applicant_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_applicant_id_bio3")
+  customCampaign      CustomCampaign @relation(fields: [custom_campaigns_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_custom_campaigns_id_bio3")
+
+  @@index([applicant_id], map: "fk_applicant_id_bio3")
+  @@index([custom_campaigns_id], map: "fk_custom_campaigns_id_bio3")
+  @@map("custom_campaigns_detail")
+}
+
+model Datalayer {
+  id          Int      @id @default(autoincrement()) @db.UnsignedInt
+  template_id Int
+  datalayer   String   @db.MediumText
+  event       String   @db.VarChar(100)
+  labels      String   @db.Text
+  template    Template @relation(fields: [template_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "datalayers_ibfk_1")
+
+  @@index([template_id], map: "template_id")
+  @@map("datalayers")
+}
+
+model DesignCategory {
+  id                   Int              @id @default(autoincrement()) @db.UnsignedInt
+  parent_id            Int?             @db.UnsignedInt
+  title                String           @db.VarChar(500)
+  type                 Int
+  html_class           String?          @db.VarChar(500)
+  dom_node             String?          @db.VarChar(500)
+  css_values           Int?             @default(1) @db.TinyInt
+  order                Int?             @default(0)
+  theme_id             Int?             @db.UnsignedInt
+  parentDesignCategory DesignCategory?  @relation("design_categoriesTodesign_categories_parent_id", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "design_categories_ibfk_1")
+  theme                Theme?           @relation(fields: [theme_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "design_categories_ibfk_2")
+  designCategories     DesignCategory[] @relation("design_categoriesTodesign_categories_parent_id")
+  designOptions        DesignOption[]
+
+  @@index([parent_id], map: "parent_id")
+  @@index([theme_id], map: "theme_id")
+  @@map("design_categories")
+}
+
+model DesignOption {
+  id             Int            @id @default(autoincrement()) @db.UnsignedInt
+  option_name    String         @db.VarChar(100)
+  option_value   String         @db.VarChar(100)
+  title          String?        @db.VarChar(500)
+  category_id    Int            @db.UnsignedInt
+  type           String?        @db.VarChar(250)
+  description    String?        @db.VarChar(1000)
+  order          Int?           @default(0)
+  rules          String?        @db.VarChar(5000)
+  designCategory DesignCategory @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "design_options_ibfk_1")
+
+  @@index([category_id], map: "category_id")
+  @@map("design_options")
+}
+
+model ElementContent {
+  id         Int        @id @default(autoincrement()) @db.UnsignedInt
+  element_id Int?       @db.UnsignedInt
+  language   String     @db.VarChar(20)
+  hide       Int        @default(0)
+  specs      String?    @db.Text
+  element    Element?   @relation(fields: [element_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "element_content_ibfk_1")
+  jobalerts  JobAlert[] @relation("element_contentTojobalerts")
+
+  @@index([element_id], map: "element_id")
+  @@map("element_content")
+}
+
+model ElementDatalayer {
+  id                          Int                    @id @default(autoincrement()) @db.UnsignedInt
+  element_template_version_id Int                    @db.UnsignedInt
+  datalayers                  String?                @db.MediumText
+  elementTemplateVersion      ElementTemplateVersion @relation(fields: [element_template_version_id], references: [id], onUpdate: Restrict, map: "element_datalayer_ibfk_1")
+
+  @@index([element_template_version_id], map: "element_template_version_id")
+  @@map("element_datalayer")
+}
+
+model ElementTemplateVersion {
+  id                     Int                @id @default(autoincrement()) @db.UnsignedInt
+  element_template_id    Int?               @db.UnsignedInt
+  title                  String?            @db.VarChar(1000)
+  component_name         String?            @db.VarChar(255)
+  specs                  String?            @db.Text
+  element_specs          String?            @db.Text
+  controller_edit_action String?            @db.VarChar(255)
+  theme_id               Int?               @db.UnsignedInt
+  preview                Int?               @default(1)
+  elementTemplate        ElementTemplate?   @relation(fields: [element_template_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "element_template_versions_ibfk_1")
+  theme                  Theme?             @relation(fields: [theme_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "element_template_versions_ibfk_2")
+  elementDatalayers      ElementDatalayer[]
+  elements               Element[]
+
+  @@index([element_template_id], map: "element_template_id")
+  @@index([theme_id], map: "theme_id")
+  @@map("element_template_versions")
+}
+
+model ElementTemplate {
+  id                      Int                      @id @default(autoincrement()) @db.UnsignedInt
+  title                   String                   @db.VarChar(100)
+  description             String                   @db.Text
+  constant_title          String?                  @db.VarChar(1000)
+  alias                   Int?                     @default(1) @db.TinyInt
+  dynamic                 Int?                     @default(0) @db.TinyInt
+  injectable              Int?                     @default(0) @db.TinyInt
+  hidden                  Boolean                  @default(false)
+  elementTemplateVersions ElementTemplateVersion[]
+
+  @@map("element_templates")
+}
+
+model ElementToPage {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  element_id Int      @db.UnsignedInt
+  page_id    Int      @db.UnsignedInt
+  position   Int
+  order      Int      @default(0)
+  dependant  Boolean? @default(false)
+  element    Element  @relation(fields: [element_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "element_to_pages_ibfk_1")
+  page       Page     @relation(fields: [page_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "element_to_pages_ibfk_2")
+
+  @@index([element_id], map: "element_id")
+  @@index([page_id], map: "page_id")
+  @@map("element_to_pages")
+}
+
+model Element {
+  id                          Int                    @id @default(autoincrement()) @db.UnsignedInt
+  element_template_version_id Int                    @db.UnsignedInt
+  title                       String                 @db.VarChar(100)
+  default                     Boolean?               @default(false)
+  created_at                  DateTime?              @db.DateTime(0)
+  created_by                  Int?                   @db.UnsignedInt
+  modified_by                 Int?                   @db.UnsignedInt
+  status                      Int?
+  pub_date                    DateTime?              @db.DateTime(0)
+  pub_end_date                DateTime?              @db.DateTime(0)
+  order                       Int?
+  page_id                     Int?                   @db.UnsignedInt
+  constant_title              String?                @db.VarChar(255)
+  specs                       String?                @db.Text
+  margin_top                  String?                @default("0rem") @db.VarChar(100)
+  margin_bottom               String?                @default("0rem") @db.VarChar(100)
+  padding_top                 String                 @default("0rem") @db.VarChar(500)
+  padding_bottom              String                 @default("0rem") @db.VarChar(500)
+  width                       String?                @default("1") @db.VarChar(10)
+  animation                   String?                @default("none") @db.VarChar(50)
+  user                        User?                  @relation(fields: [created_by], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "elements_ibfk_2")
+  elementTemplateVersion      ElementTemplateVersion @relation(fields: [element_template_version_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "elements_ibfk_1")
+  page                        Page?                  @relation(fields: [page_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "elements_ibfk_3")
+  elementContents             ElementContent[]
+  elementToPages              ElementToPage[]
+
+  @@index([created_by], map: "created_by")
+  @@index([element_template_version_id], map: "element_template_version_id")
+  @@index([page_id], map: "page_id")
+  @@map("elements")
+}
+
+model EmailTemplateContent {
+  id                Int           @id @default(autoincrement()) @db.UnsignedInt
+  email_template_id Int           @db.UnsignedInt
+  language          String        @db.VarChar(3)
+  email_subject     String        @db.VarChar(100)
+  email_body        String        @db.VarChar(10000)
+  emailTemplates    EmailTemplate @relation(fields: [email_template_id], references: [id], onDelete: Cascade, map: "email_template_contents_ibfk_1")
+
+  @@index([email_template_id], map: "email_template_id")
+  @@map("email_template_contents")
+}
+
+model EmailTemplate {
+  id                    Int                    @id @default(autoincrement()) @db.UnsignedInt
+  title                 String                 @db.VarChar(100)
+  recipient_data_label  String                 @db.VarChar(100)
+  cc_data_label         String                 @db.VarChar(100)
+  bcc_data_label        String                 @db.VarChar(100)
+  template_order        Int
+  category              String                 @db.VarChar(500)
+  category_order        Int
+  description           String                 @db.VarChar(500)
+  constant_title        String?                @db.VarChar(500)
+  entity_name           String?                @db.VarChar(500)
+  status                Int?                   @default(1)
+  privileges            Int?                   @default(2)
+  emailTemplateContents EmailTemplateContent[]
+
+  @@map("email_templates")
+}
+
+model FacebookAppAccessToken {
+  id    Int    @id @default(autoincrement()) @db.UnsignedInt
+  token String @db.VarChar(500)
+
+  @@map("facebook_app_access_token")
+}
+
+model FacebookLeadAdsCampaign {
+  id                    Int     @id @default(autoincrement()) @db.UnsignedInt
+  lead_ad_import_method String? @db.VarChar(100)
+  import_containing     String? @db.VarChar(100)
+  status                Int
+
+  @@map("facebook_lead_ads_campaign")
+}
+
+model FbAdBudget {
+  id                     Int                @id @default(autoincrement()) @db.UnsignedInt
+  is_default             Int                @default(0)
+  job_content_id         Int?               @db.UnsignedInt
+  job_attribute_value_id Int?               @db.UnsignedInt
+  bid_amount             Decimal?           @db.Decimal(10, 2)
+  daily_budget           Decimal?           @db.Decimal(10, 2)
+  max_budget             Decimal?           @db.Decimal(10, 2)
+  jobAttributeValue      JobAttributeValue? @relation(fields: [job_attribute_value_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_ad_budget_ibfk_1")
+  jobContent             JobContent?        @relation(fields: [job_content_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_ad_budget_ibfk_2")
+  fbAdSets               FbAdSet[]
+
+  @@index([job_attribute_value_id], map: "job_attribute_value_id")
+  @@index([job_content_id], map: "job_content_id")
+  @@map("fb_ad_budget")
+}
+
+model FbAdSet {
+  id                Int          @id @default(autoincrement()) @db.UnsignedInt
+  fb_ad_set_id      String?      @db.VarChar(20)
+  fb_campaign_id    Int?         @db.UnsignedInt
+  targeting_id      Int?         @db.UnsignedInt
+  name              String       @db.VarChar(100)
+  start_time        DateTime?    @db.DateTime(0)
+  end_time          DateTime?    @db.DateTime(0)
+  booston_budget_id Int?         @db.UnsignedInt
+  booston_ad_id     Int?         @db.UnsignedInt
+  status            String?      @db.VarChar(100)
+  fbAd              FbAd?        @relation("fb_ad_sets_booston_ad_idTofb_ads", fields: [booston_ad_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_ad_sets_ibfk_4")
+  fbAdBudget        FbAdBudget?  @relation(fields: [booston_budget_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_ad_sets_ibfk_3")
+  fbCampaigns       FbCampaign?  @relation(fields: [fb_campaign_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_ad_sets_ibfk_1")
+  fbTargeting       FbTargeting? @relation(fields: [targeting_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_ad_sets_ibfk_2")
+  fbAds             FbAd[]       @relation("fb_ad_setsTofb_ads_booston_ad_set_id")
+
+  @@index([booston_ad_id], map: "booston_ad_id")
+  @@index([booston_budget_id], map: "booston_budget_id")
+  @@index([fb_campaign_id], map: "fb_campaign_id")
+  @@index([targeting_id], map: "targeting_id")
+  @@map("fb_ad_sets")
+}
+
+model FbAdTemplate {
+  id                     Int                @id @default(autoincrement()) @db.UnsignedInt
+  is_default             Int                @default(0)
+  job_content_id         Int?               @db.UnsignedInt
+  job_attribute_value_id Int?               @db.UnsignedInt
+  image                  String             @db.Text
+  image_hash             String             @db.Text
+  message                String             @db.Text
+  link                   String             @db.Text
+  caption                String             @db.Text
+  ad_description         String             @db.Text
+  video                  String?            @db.VarChar(1000)
+  media_type             String             @default("1") @db.VarChar(2)
+  jobAttributeValue      JobAttributeValue? @relation(fields: [job_attribute_value_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_ad_template_ibfk_1")
+  jobContent             JobContent?        @relation(fields: [job_content_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_ad_template_ibfk_2")
+  fbAds                  FbAd[]
+
+  @@index([job_attribute_value_id], map: "job_attribute_value_id")
+  @@index([job_content_id], map: "job_content_id")
+  @@map("fb_ad_template")
+}
+
+model FbAd {
+  id                  Int           @id @default(autoincrement()) @db.UnsignedInt
+  published           Int           @default(0)
+  fb_ad_creative_id   String?       @db.VarChar(20)
+  fb_ad_id            String?       @db.VarChar(20)
+  page_id             String?       @db.VarChar(50)
+  lead_gen_id         String?       @db.VarChar(20)
+  booston_ad_set_id   Int?          @db.UnsignedInt
+  booston_template_id Int?          @db.UnsignedInt
+  job_content_id      Int?          @db.UnsignedInt
+  copy_nr             Int?
+  fbAdSet             FbAdSet?      @relation("fb_ad_setsTofb_ads_booston_ad_set_id", fields: [booston_ad_set_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_ads_ibfk_1")
+  fbAdTemplate        FbAdTemplate? @relation(fields: [booston_template_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_ads_ibfk_2")
+  jobContent          JobContent?   @relation(fields: [job_content_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_ads_ibfk_3")
+  fbAdSets            FbAdSet[]     @relation("fb_ad_sets_booston_ad_idTofb_ads")
+
+  @@index([booston_ad_set_id], map: "booston_ad_set_id")
+  @@index([booston_template_id], map: "booston_template_id")
+  @@index([job_content_id], map: "job_content_id")
+  @@map("fb_ads")
+}
+
+model FbCampaign {
+  id               Int       @id @default(autoincrement()) @db.UnsignedInt
+  fb_campaign_id   String?   @db.VarChar(20)
+  fb_ad_account_id String?   @db.VarChar(20)
+  name             String    @db.VarChar(100)
+  objective        String    @db.VarChar(100)
+  status           String    @db.VarChar(100)
+  budget_type      Int?
+  budget           Decimal?  @db.Decimal(10, 2)
+  bid_strategy     String?   @db.VarChar(50)
+  last_sync_date   DateTime? @db.DateTime(0)
+  countries        String?   @db.Text
+  fbAdSets         FbAdSet[]
+
+  @@map("fb_campaigns")
+}
+
+model FbCity {
+  id           Int          @id @default(autoincrement()) @db.UnsignedInt
+  targeting_id Int?         @db.UnsignedInt
+  city_id      String?      @db.VarChar(20)
+  name         String?      @db.VarChar(100)
+  fbTargeting  FbTargeting? @relation(fields: [targeting_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_cities_ibfk_1")
+
+  @@index([targeting_id], map: "targeting_id")
+  @@map("fb_cities")
+}
+
+model FbCostPerformanceReport {
+  id              Int      @id @default(autoincrement()) @db.UnsignedInt
+  fb_ad_set_id    Int?     @db.UnsignedInt
+  leads           Int      @db.UnsignedInt
+  conversion_rate String   @db.VarChar(100)
+  reach           Int      @db.UnsignedInt
+  views           Int      @db.UnsignedInt
+  cost            Decimal  @db.Decimal(10, 2)
+  cost_per_lead   Decimal  @db.Decimal(10, 2)
+  cpm             Decimal  @db.Decimal(10, 2)
+  ctr             Decimal  @db.Decimal(10, 2)
+  frequency       Decimal  @db.Decimal(10, 2)
+  currency        String   @db.VarChar(100)
+  engagement_rate String   @db.VarChar(100)
+  quality_ranking String   @db.VarChar(100)
+  date_start      DateTime @db.Date
+  date_stop       DateTime @db.Date
+  created_at      DateTime @db.Date
+  api_ad_set_id   String?  @db.VarChar(20)
+  fb_margin       String?  @db.VarChar(100)
+
+  @@index([fb_ad_set_id], map: "fb_ad_set_id")
+  @@map("fb_cost_performance_report")
+}
+
+model FbCountry {
+  id           Int          @id @default(autoincrement()) @db.UnsignedInt
+  targeting_id Int?         @db.UnsignedInt
+  country_id   String       @db.VarChar(20)
+  name         String       @db.VarChar(100)
+  fbTargeting  FbTargeting? @relation(fields: [targeting_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_countries_ibfk_1")
+
+  @@index([targeting_id], map: "targeting_id")
+  @@map("fb_countries")
+}
+
+model FbInterest {
+  id           Int          @id @default(autoincrement()) @db.UnsignedInt
+  targeting_id Int?         @db.UnsignedInt
+  interest_id  String       @db.VarChar(20)
+  name         String       @db.VarChar(100)
+  type         String?      @db.VarChar(100)
+  refinement   Int?         @default(0)
+  exclusion    Int?         @default(0)
+  category     String?      @db.VarChar(500)
+  fbTargeting  FbTargeting? @relation(fields: [targeting_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_interests_ibfk_1")
+
+  @@index([targeting_id], map: "targeting_id")
+  @@map("fb_interests")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model FbJobgroupAttribute {
+  id           Int           @id @default(autoincrement()) @db.UnsignedInt
+  attribute_id Int?          @db.UnsignedInt
+  jobAttribute JobAttribute? @relation(fields: [attribute_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_jobgroup_attribute_ibfk_1")
+
+  @@index([attribute_id], map: "attribute_id")
+  @@map("fb_jobgroup_attribute")
+}
+
+model FbLeadgen {
+  id                     Int                @id @default(autoincrement()) @db.UnsignedInt
+  question_heading       String             @db.Text
+  heading                String             @db.Text
+  description            String             @db.Text
+  policy_text            String             @db.Text
+  policy_url             String             @db.Text
+  thankyou_heading       String             @db.Text
+  thankyou_text          String             @db.Text
+  thankyou_button_text   String             @db.Text
+  thankyou_destination   Int?
+  is_default             Int?               @default(0)
+  language               String?            @db.VarChar(100)
+  layout                 String?            @db.VarChar(100)
+  questions              String             @db.Text
+  job_attribute_value_id Int?               @db.UnsignedInt
+  job_content_id         Int?               @db.UnsignedInt
+  visibility             Int                @default(0)
+  jobAttributeValue      JobAttributeValue? @relation(fields: [job_attribute_value_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_leadgen_ibfk_1")
+  jobContent             JobContent?        @relation(fields: [job_content_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_leadgen_ibfk_2")
+
+  @@index([job_attribute_value_id], map: "job_attribute_value_id")
+  @@index([job_content_id], map: "job_content_id")
+  @@map("fb_leadgen")
+}
+
+model FbMargin {
+  id     Int    @id @default(autoincrement()) @db.UnsignedInt
+  margin String @db.VarChar(100)
+
+  @@map("fb_margin")
+}
+
+model FbPage {
+  id           Int    @id @default(autoincrement()) @db.UnsignedInt
+  fb_id        String @db.VarChar(20)
+  access_token String @db.VarChar(500)
+  name         String @db.VarChar(2000)
+
+  @@map("fb_page")
+}
+
+model FbRegion {
+  id           Int          @id @default(autoincrement()) @db.UnsignedInt
+  targeting_id Int?         @db.UnsignedInt
+  region_id    String?      @db.VarChar(20)
+  name         String?      @db.VarChar(100)
+  fbTargeting  FbTargeting? @relation(fields: [targeting_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_regions_ibfk_1")
+
+  @@index([targeting_id], map: "targeting_id")
+  @@map("fb_regions")
+}
+
+model FbTargeting {
+  id                     Int                @id @default(autoincrement()) @db.UnsignedInt
+  is_default             Int                @default(0)
+  job_content_id         Int?               @db.UnsignedInt
+  job_attribute_value_id Int?               @db.UnsignedInt
+  geo_type               Int                @default(1)
+  country                String             @db.VarChar(5)
+  radius                 Int
+  network_type           Int?               @default(0)
+  additional_cities      Int?               @default(0)
+  jobAttributeValue      JobAttributeValue? @relation(fields: [job_attribute_value_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_targeting_ibfk_2")
+  jobContent             JobContent?        @relation(fields: [job_content_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fb_targeting_ibfk_1")
+  fbAdSets               FbAdSet[]
+  fbCities               FbCity[]
+  fbCountries            FbCountry[]
+  fbInterests            FbInterest[]
+  fbRegions              FbRegion[]
+
+  @@index([job_attribute_value_id], map: "job_attribute_value_id")
+  @@index([job_content_id], map: "job_content_id")
+  @@map("fb_targeting")
+}
+
+model GaUser {
+  id      Int      @id @default(autoincrement()) @db.UnsignedInt
+  created DateTime @db.DateTime(0)
+
+  @@map("ga_users")
+}
+
+model GdsIframe {
+  iframe_id      Int      @id @default(autoincrement()) @db.UnsignedInt
+  iframe_title   String   @db.VarChar(500)
+  iframe_content String   @db.VarChar(500)
+  report_id      Int
+  created        DateTime @db.DateTime(0)
+  created_by     Int
+  modified       DateTime @db.DateTime(0)
+  modified_by    Int
+
+  @@map("gds_iframes")
+}
+
+model GeneralOption {
+  id           Int    @id @default(autoincrement())
+  option_name  String @db.VarChar(500)
+  option_value String @db.VarChar(5000)
+
+  @@map("general_options")
+}
+
+model GoogleForJob {
+  id          Int    @id @default(autoincrement()) @db.UnsignedInt
+  template_id Int
+  script      String @db.VarChar(5000)
+
+  @@map("google_for_jobs")
+}
+
+model GoogleForJobAttributeValue {
+  id                           Int                       @id @default(autoincrement()) @db.UnsignedInt
+  google_for_jobs_attribute_id Int                       @db.UnsignedInt
+  name                         String                    @db.VarChar(500)
+  googleForJobsAttribute       GoogleForJobsAttribute    @relation(fields: [google_for_jobs_attribute_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "google_for_jobs_attribute_values_ibfk_1")
+  jobAttributeValues           JobAttributeValue[]
+  recruiterAttributeValues     RecruiterAttributeValue[]
+
+  @@index([google_for_jobs_attribute_id], map: "google_for_jobs_attribute_id")
+  @@map("google_for_jobs_attribute_values")
+}
+
+model GoogleForJobsAttribute {
+  id                          Int                          @id @default(autoincrement()) @db.UnsignedInt
+  name                        String                       @db.VarChar(200)
+  title                       String                       @db.VarChar(500)
+  type                        String                       @db.VarChar(100)
+  googleForJobAttributeValues GoogleForJobAttributeValue[]
+
+  @@map("google_for_jobs_attributes")
+}
+
+model Gtm {
+  id         Int    @id @default(autoincrement()) @db.UnsignedInt
+  head_gtm   String @db.MediumText
+  body_gtm   String @db.MediumText
+  footer_gtm String @db.MediumText
+
+  @@map("gtm")
+}
+
+model JobAttributeTitle {
+  id            Int          @id @default(autoincrement()) @db.UnsignedInt
+  attribute_id  Int          @db.UnsignedInt
+  language      String       @db.VarChar(5)
+  title         String       @db.VarChar(100)
+  jobAttributes JobAttribute @relation(fields: [attribute_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "job_attribute_titles_ibfk_1")
+
+  @@index([attribute_id], map: "attribute_id")
+  @@map("job_attribute_titles")
+}
+
+model JobAttributeValueTitle {
+  id                 Int               @id @default(autoincrement()) @db.UnsignedInt
+  attribute_value_id Int               @db.UnsignedInt
+  language           String            @db.VarChar(5)
+  title              String?           @db.VarChar(1000)
+  jobAttributeValue  JobAttributeValue @relation(fields: [attribute_value_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "job_attribute_value_titles_ibfk_1")
+
+  @@index([attribute_value_id], map: "attribute_value_id")
+  @@map("job_attribute_value_titles")
+}
+
+model JobAttributeValue {
+  id                          Int                         @id @default(autoincrement()) @db.UnsignedInt
+  attribute_id                Int                         @db.UnsignedInt
+  order                       Int
+  name                        String?                     @db.VarChar(1000)
+  image                       String?                     @db.VarChar(500)
+  automatic_order             Int
+  google_for_jobs_value_id    Int?                        @db.UnsignedInt
+  node_id                     Int?
+  job_attributes              JobAttribute                @relation(fields: [attribute_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "job_attribute_values_ibfk_1")
+  googleForJobsAttributeValue GoogleForJobAttributeValue? @relation(fields: [google_for_jobs_value_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "job_attribute_values_ibfk_2")
+  attributeToJob              AttributeToJob[]
+  fbAdBudgets                 FbAdBudget[]
+  fbAdTemplates               FbAdTemplate[]
+  fbLeadgens                  FbLeadgen[]
+  fbTargetings                FbTargeting[]
+  jobAttributeValueTitles     JobAttributeValueTitle[]
+
+  @@index([attribute_id], map: "attribute_id")
+  @@index([google_for_jobs_value_id], map: "google_for_jobs_value_id")
+  @@map("job_attribute_values")
+}
+
+model JobAttribute {
+  id                       Int                    @id @default(autoincrement()) @db.UnsignedInt
+  active                   Int                    @default(0)
+  title                    String                 @db.VarChar(100)
+  var                      String                 @db.VarChar(100)
+  name                     String                 @db.VarChar(100)
+  type                     String                 @db.VarChar(100)
+  fixed_type               Int?                   @default(1)
+  required                 Int?                   @default(0)
+  text_search              Int                    @default(0)
+  advanced_search          Int                    @default(0)
+  job_alert                Int                    @default(0)
+  search_rank              Int
+  icon                     String                 @db.VarChar(20)
+  pub_job_detail           Int                    @default(0)
+  pub_job_box              Int                    @default(0)
+  pub_job_alert            Int                    @default(0)
+  max_char                 Int?                   @default(1000)
+  autopopulate_by_ats      Int
+  manage_locale_separately Int                    @default(1)
+  atsAttributesMatchers    AtsAttributesMatcher[]
+  attributeToJobs          AttributeToJob[]
+  fbJobgroupAttributes     FbJobgroupAttribute[]
+  jobAttributeTitles       JobAttributeTitle[]
+  jobAttributeValues       JobAttributeValue[]
+
+  @@map("job_attributes")
+}
+
+model JobContent {
+  id                 Int            @id @default(autoincrement()) @db.UnsignedInt
+  job_id             Int            @db.UnsignedInt
+  language           String         @db.VarChar(20)
+  hide               Int?           @default(0)
+  modified           DateTime?      @db.DateTime(0)
+  modified_by        Int            @db.UnsignedInt
+  slug               String         @db.VarChar(100)
+  page_title         String         @db.VarChar(100)
+  meta_description   String?        @db.VarChar(500)
+  title              String         @db.VarChar(100)
+  zipcode            String?        @db.VarChar(100)
+  salary_min         String?        @db.VarChar(60)
+  salary_max         String?        @db.VarChar(60)
+  img                String?        @db.VarChar(500)
+  video              String?        @db.VarChar(500)
+  address            String?        @db.VarChar(100)
+  city               String?        @db.VarChar(100)
+  txt_1              String?        @db.Text
+  txt_2              String?        @db.Text
+  txt_3              String?        @db.Text
+  txt_4              String?        @db.Text
+  txt_5              String?        @db.Text
+  txt_6              String?        @db.Text
+  txt_7              String?        @db.Text
+  txt_8              String?        @db.Text
+  usp_1              String?        @db.Text
+  usp_2              String?        @db.Text
+  redirect           String?        @db.VarChar(10000)
+  ats_publication_id String?        @db.VarChar(100)
+  job                Job            @relation(fields: [job_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "job_content_ibfk_1")
+  user               User           @relation(fields: [modified_by], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "job_content_ibfk_2")
+  fbAdBudgets        FbAdBudget[]
+  fbAdTemplates      FbAdTemplate[]
+  fbAds              FbAd[]
+  fbLeadgens         FbLeadgen[]
+  fbTargetings       FbTargeting[]
+
+  @@index([modified_by], map: "modified_by")
+  @@index([job_id], map: "page_id")
+  @@map("job_content")
+}
+
+model JobAlert {
+  id                 Int             @id @default(autoincrement()) @db.UnsignedInt
+  active             Int             @default(1)
+  email              String          @db.VarChar(100)
+  frequency          Int
+  opt_in             Int
+  created            DateTime        @db.DateTime(0)
+  last_email         DateTime        @db.DateTime(0)
+  filters            String          @db.Text
+  token              String          @db.VarChar(128)
+  element_content_id Int?            @db.UnsignedInt
+  language           String?         @default("nl") @db.VarChar(3)
+  elementContent     ElementContent? @relation("element_contentTojobalerts", fields: [element_content_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "jobalerts_ibfk_1")
+
+  @@index([element_content_id], map: "element_content_id")
+  @@map("jobalerts")
+}
+
+model Job {
+  id                   Int              @id @default(autoincrement()) @db.UnsignedInt
+  created              DateTime?        @db.DateTime(0)
+  created_by           Int              @db.UnsignedInt
+  level                Int?
+  recruiter_id         Int              @db.UnsignedInt
+  active               Int              @default(1)
+  boost                Int              @default(0)
+  ats_id               String?          @db.VarChar(100)
+  main_page_color      String?          @default("[[main_page_color]]") @db.VarChar(500)
+  secondary_page_color String?          @default("[[secondary_page_color]]") @db.VarChar(500)
+  data_layer           String?          @db.VarChar(1000)
+  pub_date             DateTime?        @db.DateTime(0)
+  pub_end_date         DateTime?        @db.DateTime(0)
+  updatedAt            DateTime?        @db.DateTime(0)
+  user                 User             @relation(fields: [created_by], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "jobs_ibfk_2")
+  recruiter            Recruiter        @relation(fields: [recruiter_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "jobs_ibfk_1")
+  additionalJobs       AdditionalJob[]
+  applicantToJobs      ApplicantToJob[]
+  applications         Application[]
+  attributeToJobs      AttributeToJob[]
+  jobContents          JobContent[]
+
+  @@index([created_by], map: "created_by")
+  @@index([recruiter_id], map: "recruiter_id")
+  @@map("jobs")
+}
+
+model Label {
+  id       Int     @id @default(autoincrement()) @db.UnsignedInt
+  index    String? @db.VarChar(100)
+  label_nl String? @db.VarChar(100)
+  label_en String  @db.VarChar(100)
+  label_hu String? @db.VarChar(100)
+
+  @@map("labels")
+}
+
+model Language {
+  code       String @id @db.VarChar(5)
+  language   String @db.VarChar(100)
+  is_default Int
+
+  @@map("languages")
+}
+
+model LeadDetail {
+  id           String   @id @db.VarChar(100)
+  lead_id      String   @db.VarChar(100)
+  created_time DateTime @db.DateTime(6)
+  field_data   String   @db.VarChar(500)
+  lead         Lead     @relation(fields: [lead_id], references: [id], onDelete: Cascade, map: "lead_details_ibfk_1")
+
+  @@index([lead_id], map: "lead_details_ibfk_1")
+  @@map("lead_details")
+}
+
+model Lead {
+  id           String       @id @db.VarChar(100)
+  name         String       @db.VarChar(500)
+  export_url   String       @db.VarChar(500)
+  status       String       @db.VarChar(100)
+  created_time DateTime     @db.DateTime(6)
+  job_id       Int
+  recruiter_id Int
+  leadDetails  LeadDetail[]
+
+  @@map("leads")
+}
+
+model Location {
+  id                Int                @id @default(autoincrement()) @db.UnsignedInt
+  created           DateTime?          @db.DateTime(0)
+  created_by        Int?
+  modified          DateTime?          @db.DateTime(0)
+  modified_by       Int?
+  title             String?            @db.VarChar(100)
+  body              String?            @db.Text
+  slug              String?            @db.VarChar(100)
+  address           String?            @db.VarChar(100)
+  zipcode           String?            @db.VarChar(100)
+  city              String?            @db.VarChar(100)
+  phone             String?            @db.VarChar(100)
+  email             String?            @db.VarChar(100)
+  img               String?            @db.VarChar(100)
+  short_description String?            @db.Text
+  country           String?            @db.VarChar(200)
+  main              Int?
+  recruiterContents RecruiterContent[]
+
+  @@map("locations")
+}
+
+model Log {
+  id         Int      @id @default(autoincrement()) @db.UnsignedInt
+  created    DateTime @db.DateTime(0)
+  url        String   @db.VarChar(200)
+  ga_user_id Int
+
+  @@map("log")
+}
+
+model MailingList {
+  id      Int      @id @default(autoincrement()) @db.UnsignedInt
+  created DateTime @db.DateTime(0)
+  email   String   @db.VarChar(100)
+  active  Int      @default(1)
+
+  @@map("mailinglist")
+}
+
+model MenuItemContent {
+  id          Int      @id @default(autoincrement()) @db.UnsignedInt
+  menuitem_id Int      @db.UnsignedInt
+  language    String   @db.VarChar(20)
+  modified    DateTime @db.DateTime(0)
+  modified_by Int?     @db.UnsignedInt
+  title       String   @db.VarChar(5000)
+  url         String   @db.VarChar(5000)
+  description String   @db.VarChar(500)
+  menuitem    MenuItem @relation(fields: [menuitem_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "menuitem_content_ibfk_1")
+  user        User?    @relation(fields: [modified_by], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "menuitem_content_ibfk_2")
+
+  @@index([menuitem_id], map: "menuitem_id")
+  @@index([modified_by], map: "modified_by")
+  @@map("menuitem_content")
+}
+
+model MenuItem {
+  id               Int               @id @default(autoincrement()) @db.UnsignedInt
+  type             Int
+  page_id          Int?              @db.UnsignedInt
+  parent_id        Int?              @db.UnsignedInt
+  order            Int               @default(0)
+  icon_class       String?           @db.VarChar(5000)
+  icon_url         String?           @db.VarChar(6000)
+  icon_type        Int?              @default(0)
+  item_text        String?           @db.VarChar(200)
+  pages            Page?             @relation(fields: [page_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "menuitems_ibfk_2")
+  parentMenuItem   MenuItem?         @relation("menuitemsTomenuitems_parent_id", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "menuitems_ibfk_1")
+  menuItemContents MenuItemContent[]
+  menuItems        MenuItem[]        @relation("menuitemsTomenuitems_parent_id")
+
+  @@index([page_id], map: "page_id")
+  @@index([parent_id], map: "parent_id")
+  @@map("menuitems")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model Migration {
+  version BigInt
+
+  @@map("migrations")
+  @@ignore
+}
+
+model Page {
+  id                    Int              @id @default(autoincrement()) @db.UnsignedInt
+  template_version_id   Int?             @db.UnsignedInt
+  created               DateTime         @db.DateTime(0)
+  created_by            Int
+  level                 Int
+  status                Int              @default(0)
+  pub_date              DateTime         @db.DateTime(0)
+  pub_end_date          DateTime?        @db.DateTime(0)
+  main_page_color       String?          @default("[[main_page_color]]") @db.VarChar(500)
+  secondary_page_color  String?          @default("[[secondary_page_color]]") @db.VarChar(500)
+  data_layer            String?          @db.VarChar(1000)
+  modified              DateTime?        @db.DateTime(0)
+  modified_by           Int?
+  order                 Int?
+  boost                 Int?             @default(0)
+  location_id           Int?
+  layout                Int              @default(0) @db.SmallInt
+  constant_title        String?          @db.VarChar(300)
+  abstract_page         Boolean?         @default(false)
+  data_layer_customized Boolean?         @default(false)
+  specs                 String?          @db.Text
+  templateVersion       TemplateVersion? @relation("pagesTotemplate_versions", fields: [template_version_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "pages_ibfk_1")
+  elementToPages        ElementToPage[]
+  elements              Element[]
+  menuItems             MenuItem[]
+
+  @@index([template_version_id], map: "template_version_id")
+  @@map("pages")
+}
+
+model PcData {
+  id        Int                  @id @default(autoincrement()) @db.UnsignedInt
+  postcode  String?              @db.VarChar(500)
+  residence String?              @db.TinyText
+  latitude  Float?
+  longitude Float?
+  kind      String?              @db.TinyText
+  geo_point Unsupported("point")
+
+  @@map("pc_data")
+}
+
+model RecruiterAttributeTitle {
+  id                      Int                @id @default(autoincrement()) @db.UnsignedInt
+  recruiter_attributes_id Int                @db.UnsignedInt
+  language                String             @db.VarChar(5)
+  title                   String             @db.VarChar(100)
+  recruiterAttribute      RecruiterAttribute @relation(fields: [recruiter_attributes_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "recruiter_attribute_titles_ibfk_1")
+
+  @@index([recruiter_attributes_id], map: "recruiter_attributes_id")
+  @@map("recruiter_attribute_titles")
+}
+
+model RecruiterAttributeValueTitle {
+  id                           Int                     @id @default(autoincrement()) @db.UnsignedInt
+  recruiter_attribute_value_id Int                     @db.UnsignedInt
+  language                     String                  @db.VarChar(5)
+  title                        String                  @db.VarChar(100)
+  recruiterAttributeValues     RecruiterAttributeValue @relation(fields: [recruiter_attribute_value_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "recruiter_attribute_value_titles_ibfk_1")
+
+  @@index([recruiter_attribute_value_id], map: "recruiter_attribute_value_id")
+  @@map("recruiter_attribute_value_titles")
+}
+
+model RecruiterAttributeValue {
+  id                            Int                            @id @default(autoincrement()) @db.UnsignedInt
+  recruiter_attributes_id       Int                            @db.UnsignedInt
+  order                         Int
+  name                          String                         @db.VarChar(1000)
+  image                         String                         @db.VarChar(500)
+  automatic_order               Int
+  google_for_jobs_value_id      Int?                           @db.UnsignedInt
+  googleForJobAttributeValue    GoogleForJobAttributeValue?    @relation(fields: [google_for_jobs_value_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "recruiter_attribute_values_ibfk_3")
+  recruiterAttribute            RecruiterAttribute             @relation(fields: [recruiter_attributes_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "recruiter_attribute_values_ibfk_1")
+  recruiterAttributeValueTitles RecruiterAttributeValueTitle[]
+
+  @@index([google_for_jobs_value_id], map: "google_for_jobs_value_id")
+  @@index([recruiter_attributes_id], map: "recruiter_attributes_id")
+  @@map("recruiter_attribute_values")
+}
+
+model RecruiterAttribute {
+  id                             Int                             @id @default(autoincrement()) @db.UnsignedInt
+  active                         Int                             @default(0)
+  title                          String                          @db.VarChar(100)
+  var                            String                          @db.VarChar(100)
+  name                           String                          @db.VarChar(100)
+  type                           String                          @db.VarChar(100)
+  required                       Int                             @default(0)
+  text_search                    Int                             @default(0)
+  advanced_search                Int                             @default(0)
+  job_alert                      Int                             @default(0)
+  search_rank                    Int
+  icon                           String                          @db.VarChar(20)
+  pub_job_detail                 Int                             @default(0)
+  pub_job_box                    Int                             @default(0)
+  pub_recruiter_detail           Int                             @default(0)
+  pub_recruiter_box              Int                             @default(0)
+  max_char                       Int                             @default(1000)
+  autopopulate_by_ats            Int                             @default(0)
+  manage_locale_separately       Int                             @default(1)
+  atsRecruiterAttributesMatchers AtsRecruiterAttributesMatcher[]
+  recruiterAttributeTitles       RecruiterAttributeTitle[]
+  recruiterAttributeValues       RecruiterAttributeValue[]
+
+  @@map("recruiter_attributes")
+}
+
+model RecruiterContent {
+  id               Int       @id @default(autoincrement()) @db.UnsignedInt
+  recruiter_id     Int       @db.UnsignedInt
+  location_id      Int       @db.UnsignedInt
+  hide             Int       @default(0)
+  language         String?   @db.VarChar(5)
+  page_title       String?   @db.VarChar(100)
+  meta_description String?   @db.VarChar(200)
+  name             String?   @db.VarChar(100)
+  slug             String?   @db.VarChar(100)
+  email            String?   @db.VarChar(100)
+  function         String?   @db.VarChar(100)
+  description      String?   @db.VarChar(100)
+  body             String?   @db.Text
+  phone            String?   @db.VarChar(100)
+  mobile           String?   @db.VarChar(100)
+  linkedin         String?   @db.VarChar(100)
+  twitter          String?   @db.VarChar(100)
+  instagram        String?   @db.VarChar(100)
+  facebook         String?   @db.VarChar(100)
+  portrait         String?   @db.VarChar(100)
+  img              String?   @db.VarChar(100)
+  img_2            String?   @db.VarChar(100)
+  img_3            String?   @db.VarChar(100)
+  img_4            String?   @db.VarChar(100)
+  video            String?   @db.VarChar(100)
+  location         Location  @relation(fields: [location_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "recruiter_content_ibfk_2")
+  recruiter        Recruiter @relation(fields: [recruiter_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "recruiter_content_ibfk_1")
+
+  @@index([location_id], map: "location_id")
+  @@index([recruiter_id], map: "recruiter_id")
+  @@map("recruiter_content")
+}
+
+model Recruiter {
+  id                Int                @id @default(autoincrement()) @db.UnsignedInt
+  order             Int?
+  created           DateTime           @db.DateTime(0)
+  created_by        Int
+  modified          DateTime           @db.DateTime(0)
+  modified_by       Int
+  active            Int?               @default(0)
+  set_by_ats        Int?               @default(0)
+  boost             Int?               @default(0)
+  recruiter_ats_id  String?            @db.VarChar(100)
+  jobs              Job[]
+  recruiterContents RecruiterContent[]
+  userRecruiters    UserRecruiter[]
+
+  @@map("recruiters")
+}
+
+model Redirect {
+  id      Int    @id @default(autoincrement()) @db.UnsignedInt
+  type301 Int    @default(1)
+  old_url String @db.VarChar(200)
+  new_url String @db.VarChar(200)
+
+  @@map("redirects")
+}
+
+model Report {
+  report_id     Int      @id @default(autoincrement()) @db.UnsignedInt
+  canvas_width  String   @db.VarChar(11)
+  canvas_height String   @db.VarChar(11)
+  auto_slide    Int
+  slide_speed   Int
+  created       DateTime @db.DateTime(0)
+  created_by    Int
+  modified      DateTime @db.DateTime(0)
+  modified_by   Int
+
+  @@map("reports")
+}
+
+model SystemFont {
+  id   Int    @id @default(autoincrement()) @db.UnsignedInt
+  name String @db.VarChar(300)
+
+  @@map("system_fonts")
+}
+
+model TemplateVersion {
+  id                        Int      @id @default(autoincrement()) @db.UnsignedInt
+  template_id               Int
+  title                     String   @db.VarChar(1000)
+  outside_controller_action String?  @db.VarChar(250)
+  file_name                 String?  @db.VarChar(250)
+  specs                     String?  @db.Text
+  dom                       String?  @db.Text
+  element_specs             String?  @db.Text
+  template                  Template @relation(fields: [template_id], references: [id], onUpdate: Restrict, map: "template_versions_ibfk_1")
+  pages                     Page[]   @relation("pagesTotemplate_versions")
+
+  @@index([template_id], map: "template_id")
+  @@map("template_versions")
+}
+
+model Template {
+  id               Int               @id @default(autoincrement())
+  title            String            @db.VarChar(100)
+  description      String            @db.Text
+  alias            Int               @default(0)
+  constant_title   String?           @unique(map: "constant_title") @db.VarChar(1000)
+  datalayers       Datalayer[]
+  templateVersions TemplateVersion[]
+
+  @@map("templates")
+}
+
+model TestimonialTargetingGroup {
+  id                Int @id @default(autoincrement()) @db.UnsignedInt
+  testimonial_id    Int
+  function_group_id Int
+
+  @@map("testimonial_targeting_groups")
+}
+
+model UserPermission {
+  id               Int         @id @default(autoincrement())
+  admin_modules_id Int
+  user_role_id     Int
+  visible          Int
+  active           Int
+  read_rights      Int
+  create_rights    Int
+  edit_rights      Int
+  delete_rights    Int
+  adminModule      AdminModule @relation(fields: [admin_modules_id], references: [id], onUpdate: Restrict, map: "user_permissions_ibfk_1")
+  userRole         UserRole    @relation(fields: [user_role_id], references: [id], onUpdate: Restrict, map: "user_permissions_ibfk_2")
+
+  @@index([admin_modules_id], map: "admin_modules_id")
+  @@index([user_role_id], map: "user_role_id")
+  @@map("user_permissions")
+}
+
+model UserRole {
+  id              Int              @id @default(autoincrement())
+  role            String           @db.VarChar(100)
+  default_page_id Int
+  adminModule     AdminModule      @relation(fields: [default_page_id], references: [id], onUpdate: Restrict, map: "user_role_ibfk_1")
+  userPermissions UserPermission[]
+
+  @@index([default_page_id], map: "default_page_id")
+  @@map("user_role")
+}
+
+model UserToPage {
+  id      Int @id @default(autoincrement()) @db.UnsignedInt
+  user_id Int
+  page_id Int
+
+  @@map("user_to_page")
+}
+
+model User {
+  id                     Int               @id @default(autoincrement()) @db.UnsignedInt
+  name                   String            @db.VarChar(100)
+  email                  String            @db.VarChar(100)
+  password               String            @db.VarChar(128)
+  img                    String            @db.VarChar(100)
+  level                  Int
+  function               String            @db.VarChar(500)
+  created                DateTime          @db.DateTime(0)
+  modified               DateTime          @db.DateTime(0)
+  token                  String            @db.VarChar(128)
+  ga                     String            @db.VarChar(100)
+  fb_page_token          String            @db.VarChar(500)
+  show_open_applications Int?              @default(0)
+  elements               Element[]
+  jobContents            JobContent[]
+  jobs                   Job[]
+  menuItemContents       MenuItemContent[]
+  userRecruiters         UserRecruiter[]
+
+  @@map("users")
+}
+
+model UserRecruiter {
+  user_id      Int       @db.UnsignedInt
+  recruiter_id Int       @db.UnsignedInt
+  recruiter    Recruiter @relation(fields: [recruiter_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_recruiter_id")
+  user         User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_id")
+
+  @@id([user_id, recruiter_id])
+  @@index([recruiter_id], map: "fk_recruiter_id")
+  @@map("users_recruiters")
+}
+
+model Theme {
+  id                      Int                      @id @default(autoincrement()) @db.UnsignedInt
+  name                    String                   @db.VarChar(100)
+  slug                    String                   @db.VarChar(100)
+  designCategories        DesignCategory[]
+  elementTemplateVersions ElementTemplateVersion[]
+
+  @@map("theme")
+}
+
+model AdditionalJobType {
+  id             Int             @id @default(autoincrement()) @db.UnsignedInt
+  name           String          @db.VarChar(100)
+  additionalJobs AdditionalJob[] @relation("additional_job_typesToadditional_jobs")
+
+  @@map("additional_job_types")
+}
+
+model Category {
+  id                   Int                   @id @default(autoincrement()) @db.UnsignedInt
+  parent_id            Int?                  @db.UnsignedInt
+  name                 String?               @db.VarChar(255)
+  constant_title       String?               @db.VarChar(255)
+  image                String?               @db.VarChar(5000)
+  order                String?               @db.VarChar(255)
+  created_at           DateTime?             @default(now()) @db.DateTime(0)
+  updated_at           DateTime?             @default(now()) @db.DateTime(0)
+  parentCategory       Category?             @relation("categoryTocategory_parent_id", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "category_ibfk_1")
+  categories           Category[]            @relation("categoryTocategory_parent_id")
+  categoryTranslations CategoryTranslation[]
+
+  @@index([parent_id], map: "parent_id")
+  @@map("category")
+}
+
+model CategoryTranslation {
+  id          Int       @id @default(autoincrement()) @db.UnsignedInt
+  category_id Int?      @db.UnsignedInt
+  language    String?   @db.VarChar(100)
+  title       String?   @db.VarChar(255)
+  created_at  DateTime? @default(now()) @db.DateTime(0)
+  updated_at  DateTime? @default(now()) @db.DateTime(0)
+  category    Category? @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "category_translation_ibfk_1")
+
+  @@index([category_id], map: "category_id")
+  @@map("category_translation")
+}
